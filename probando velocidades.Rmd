@@ -1,0 +1,50 @@
+---
+title: "probando velocidades"
+author: "Tomas"
+date: "27/6/2021"
+output: html_document
+---
+
+
+
+```{r}
+library(tidyverse)
+library(jsonlite)
+library(sf)
+library(lubridate)
+library(tictoc)
+library(data.table)
+ahora<-now()
+```
+
+
+Leyendo sf
+```{r SF}
+
+tic("SF")
+bondis<-read_sf("/Documentos/api_transporte/datos/2021-06-24/2021-06-24_2.geojson")
+toc()
+```
+
+escribiendo rds
+```{r}
+ruta<-sprintf("D:/Documentos/api_transporte/datos/%s/bondi%1$s_%s%s.rds", date(ahora),hour(ahora),minute(ahora))
+ruta_guardado<-sprintf("D:/Documentos/api_transporte/datos/%s/",date(ahora))
+tic("rds")
+
+  if (dir.exists(ruta_guardado)){
+    saveRDS(bondis,ruta, compress = F)
+  } else {
+    dir.create(ruta_guardado)
+    saveRDS(bondis,ruta, compress = F)
+  }
+toc()
+```
+
+
+escribiendo rds
+```{r}
+tic("rds")
+bondis<-read_rds(ruta)
+toc()
+```

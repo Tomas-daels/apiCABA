@@ -8,25 +8,41 @@ library(sf)
 ahora<-now()
 
 #bajamos la info de la API
-  #leemos de la api 
-  bondi<- do.call(rbind.data.frame, read_json("https://apitransporte.buenosaires.gob.ar/colectivos/vehiclePositionsSimple?client_id=fb5c063d6b1a4b3bb89825f3f49abd63&client_secret=fE7966343DC3436585De51A6715bE6e7"))
-  #agregamos la fecha y hora
-  bondi<-mutate(bondi,fecha = now())
-  #lo interpretamos como un sf
-  bondi_geo<-st_as_sf(bondi, coords = c("longitude", "latitude"), crs = 4326)
-  #creamos la ruta
-  ruta<-sprintf("D:/Documentos/api_transporte/datos/%s/bondis_geo_%s_%s%s.geojson", date(ahora),date(ahora),hour(ahora),minute(ahora))
-  ruta_guardado<-sprintf("D:/Documentos/api_transporte/datos/%s/,date(ahora)")
-  #guardamos el archivo que generamos
-  
-  
+#leemos de la api 
+# bondi<- do.call(rbind.data.frame, read_json("https://apitransporte.buenosaires.gob.ar/colectivos/vehiclePositionsSimple?client_id=fb5c063d6b1a4b3bb89825f3f49abd63&client_secret=fE7966343DC3436585De51A6715bE6e7"))
+
+url_api<-"https://apitransporte.buenosaires.gob.ar/colectivos/vehiclePositionsSimple?client_id=fb5c063d6b1a4b3bb89825f3f49abd63&client_secret=fE7966343DC3436585De51A6715bE6e7"
+
+bondi<-fromJSON(url_api)
+
+bondi<-mutate(bondi,fecha = as.POSIXct(timestamp, origin="1970-01-01")) #reinterpretamos la fecha y hora del timestamp
+
+ruta<-sprintf("D:/Documentos/api_transporte/datos/%s/bondi%1$s_%s%s.json", date(ahora),hour(ahora),minute(ahora))
+ruta_guardado<-sprintf("D:/Documentos/api_transporte/datos/%s/",date(ahora))
+#guardamos el archivo que generamos
+
+tic("json")
+if (dir.exists(ruta_guardado)){
+  write_json(bondi,ruta)
+} else {
+  dir.create(ruta_guardado)
+  write_json(bondi,ruta)
+}
+toc()
+
+ruta<-sprintf("D:/Documentos/api_transporte/datos/%s/bondi%1$s_%s%s.rds", date(ahora),hour(ahora),minute(ahora))
+tic("rds")
+
   if (dir.exists(ruta_guardado)){
-     write_sf(bondi_geo,ruta)
+    saveRDS(bondi,ruta, compress = F)
   } else {
     dir.create(ruta_guardado)
-    write_sf(bondi_geo,ruta)
+    saveRDS(bondi,ruta, compress = F)
   }
+toc()
 
+
+bondi_2<-fromJSON("/Documentos/api_transporte/datos/2021-06-26/bondi2021-06-26_2140.json")
 
 # #buscamos el historico, vamos a hacer un archivo por día para que sea manejable
 #   #bucamos la ruta del histórico
